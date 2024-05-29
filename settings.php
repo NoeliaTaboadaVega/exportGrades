@@ -60,16 +60,12 @@ if ($ADMIN->fulltree) {
         get_string('descconfig', 'mod_exportgrades')
     ));
     
-    // Opciones de idioma disponibles
-    $langoptions = array(
-        'en' => get_string('english', 'mod_exportgrades'),
-        'es' => get_string('spanish', 'mod_exportgrades')
-    );
+    $current_language = current_language();  // Obtiene el idioma actual de Moodle
     $settings->add(new admin_setting_configselect(
         'mod_exportgrades/language',
         get_string('language', 'mod_exportgrades'),
         get_string('languagedesc', 'mod_exportgrades'),
-        'en', $langoptions
+        $current_language, $langoptions
     ));
 
     $ADMIN->add('modules', $settings);
