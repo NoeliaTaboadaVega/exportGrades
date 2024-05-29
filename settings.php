@@ -35,7 +35,7 @@ if ($ADMIN->fulltree) {
         'daily',
         array(
             'daily' => get_string('daily', 'mod_exportgrades'),
-            'weekly' => get_string('weekly', 'mod_exportalbums'),
+            'weekly' => get_string('weekly', 'mod_exportgrades'),
             'monthly' => get_string('monthly', 'mod_exportgrades')
         )
     ));
