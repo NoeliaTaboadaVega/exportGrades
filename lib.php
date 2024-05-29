@@ -30,6 +30,9 @@ defined('MOODLE_INTERNAL') || die();
  * @param string $feature Constant representing the feature.
  * @return true | null True if the feature is supported, null otherwise.
  */
+
+require_once($CFG->libdir . '/excellib.class.php'); 
+
 function exportgrades_supports($feature) {
     switch ($feature) {
         case FEATURE_MOD_INTRO:
@@ -38,6 +41,51 @@ function exportgrades_supports($feature) {
             return null;
     }
 }
+
+function exportgrades_generate_excel($categoryid) {
+    global $DB, $CFG;
+
+    // Crear un nuevo documento Excel
+    $filename = 'exported_grades_' . $categoryid . '.xlsx';
+    $filepath = $CFG->dataroot . '/temp/' . $filename;
+    $workbook = new \MoodleExcelWorkbook($filepath);
+    $sheet = $workbook->add_worksheet(get_string('grades'));
+
+    // Encabezados de la hoja de cálculo
+    $headers = array('Curso', 'ID Estudiante', 'Nombre Item', 'Calificación Final');
+    $rownum = 0;
+    $colnum = 0;
+    foreach ($headers as $header) {
+        $sheet->write_string($rownum, $colnum++, $header);
+    }
+    $rownum++;
+
+    // Obtener cursos en la categoría
+    $courses = $DB->get_records('course', array('category' => $categoryid));
+    foreach ($courses as $course) {
+        $grades = $DB->get_records_sql("
+            SELECT gg.*, gi.itemname, u.firstname, u.lastname
+            FROM {grade_grades} gg
+            JOIN {grade_items} gi ON gi.id = gg.itemid
+            JOIN {user} u ON u.id = gg.userid
+            WHERE gi.courseid = ? AND gg.finalgrade IS NOT NULL
+        ", array($course->id));
+
+        foreach ($grades as $grade) {
+            $sheet->write_string($rownum, 0, $course->fullname);
+            $sheet->write_string($rownum, 1, $grade->userid);
+            $sheet->write_string($rownum, 2, $grade->itemname);
+            $sheet->write_string($rownum, 3, $grade->finalgrade);
+            $rownum++;
+        }
+    }
+
+    // Cerrar el documento Excel y guardar el archivo
+    $workbook->close();
+
+    return $filepath;
+}
+
 
 /**
  * Saves a new instance of the mod_exportgrades into the database.
